@@ -1,0 +1,87 @@
+#Sentiment Analysis using Transformers
+
+import torch
+from transformers import pipeline
+import csv
+
+# ===================== 1. DEVICE SETUP =====================
+
+device = 0 if torch.cuda.is_available() else -1
+print("Using device:", "GPU" if device == 0 else "CPU")
+
+# ===================== 2. LOAD MODEL =====================
+
+print("\nLoading sentiment analysis model...")
+
+sentiment_analyzer = pipeline(
+    "sentiment-analysis",
+    device=device
+)
+
+print("Model loaded successfully!\n")
+
+# ===================== 3. INPUT DATA =====================
+
+texts = [
+    "I absolutely love this product! It works perfectly.",
+    "This is the worst service I have ever experienced.",
+    "The movie was okay, not very exciting but not bad either.",
+    "Amazing experience! Highly recommend it to everyone.",
+    "Terrible quality. Completely disappointed.",
+    "The app is useful but needs improvement.",
+    "Fantastic performance and great user interface.",
+    "I am not satisfied with the results.",
+    "It is decent for the price.",
+    "Excellent customer support and fast delivery!"
+]
+
+# ===================== 4. ANALYSIS FUNCTION =====================
+
+def analyze_sentiment(text):
+    result = sentiment_analyzer(text)[0]
+    return result['label'], result['score']
+
+# ===================== 5. PROCESS TEXTS =====================
+
+results = []
+
+print("Performing sentiment analysis...\n")
+
+for i, text in enumerate(texts):
+    label, score = analyze_sentiment(text)
+
+    print(f"Text {i+1}: {text}")
+    print(f"Sentiment: {label}")
+    print(f"Confidence: {score:.4f}")
+    print("-" * 60)
+
+    results.append([text, label, score])
+
+# ===================== 6. SAVE RESULTS TO CSV =====================
+
+csv_file = "sentiment_results.csv"
+
+with open(csv_file, mode="w", newline='', encoding="utf-8") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Text", "Sentiment", "Confidence"])
+    writer.writerows(results)
+
+print(f"\nResults saved to {csv_file}")
+
+# ===================== 7. STATISTICS =====================
+
+positive = sum(1 for r in results if r[1] == "POSITIVE")
+negative = sum(1 for r in results if r[1] == "NEGATIVE")
+
+print("\nSentiment Summary:")
+print(f"Total Texts: {len(results)}")
+print(f"Positive: {positive}")
+print(f"Negative: {negative}")
+
+# ===================== 8. CONFIDENCE ANALYSIS =====================
+
+avg_confidence = sum(r[2] for r in results) / len(results)
+
+print(f"\nAverage Confidence Score: {avg_confidence:.4f}")
+
+print("\nSentiment Analysis completed successfully!")
